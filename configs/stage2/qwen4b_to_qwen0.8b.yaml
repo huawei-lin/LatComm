@@ -1,0 +1,28 @@
+# Stage 2: task supervision. The compressors stay fixed; the readers and gates are trained
+# on stored packets. Global batch 384 = 48 per GPU x 8 GPUs; three epochs are 2,208 updates.
+encoder:
+  model_name_or_path: Qwen/Qwen3.5-4B
+  model_loader: multimodal_lm
+receiver:
+  model_name_or_path: Qwen/Qwen3.5-0.8B
+  model_loader: multimodal_lm
+bridge:
+  context_dim: 256      # slot width d
+  num_layer_pairs: 1.0  # every layer of the shallower model is paired
+  num_slots: 32         # slots per layer pair S
+data:
+  dataset_root: data/stage2
+  response_format: mcq
+  packet_cache: packets/qwen4b_to_qwen0.8b
+training:
+  output_dir: outputs/stage2/qwen4b_to_qwen0.8b
+  init_checkpoint: outputs/stage1/qwen4b_to_qwen0.8b/checkpoints/final
+  trainable: readers_and_gates
+  per_device_batch_size: 48
+  gradient_accumulation_steps: 1
+  num_epochs: 3
+  learning_rate: 1.0e-4
+  scheduler: cosine
+  warmup_steps: 45
+  eval_every: 100
+  save_every: 500

@@ -1,0 +1,30 @@
+# Stage 1: context reconstruction. Trains the compressors, readers and gates.
+# Global batch 384 = 16 per GPU x 8 GPUs x 3 accumulation steps; one epoch is 5,209 updates.
+encoder:
+  model_name_or_path: Qwen/Qwen3.5-9B
+  model_loader: multimodal_lm
+receiver:
+  model_name_or_path: Qwen/Qwen3.5-0.8B
+  model_loader: multimodal_lm
+bridge:
+  context_dim: 256      # slot width d
+  num_layer_pairs: 1.0  # every layer of the shallower model is paired
+  num_slots: 32         # slots per layer pair S
+data:
+  dataset_root: data/stage1
+  response_format: text
+  max_context_length: 1152
+  max_prompt_length: 128
+  max_response_length: 1152
+  sort_within_update: true
+training:
+  output_dir: outputs/stage1/qwen9b_to_qwen0.8b
+  trainable: all
+  per_device_batch_size: 16
+  gradient_accumulation_steps: 3
+  num_epochs: 1
+  learning_rate: 1.0e-4
+  scheduler: constant
+  warmup_steps: 157
+  eval_every: 100
+  save_every: 500
